@@ -17,7 +17,6 @@ export default function Navbar() {
                     donkeyType
                 </span>
             </div>
-
             <NavLink
             to='/'
             className={({isActive})=> 

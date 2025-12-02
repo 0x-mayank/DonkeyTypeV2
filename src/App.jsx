@@ -8,7 +8,6 @@ import Test from './pages/Test'
 
 
 function App() {
-  
   return (
     <div className='min-h-screen bg-[#f2f0e3] text-gray-800'>
       <Navbar/>
