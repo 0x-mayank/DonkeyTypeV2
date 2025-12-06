@@ -1,10 +1,13 @@
 import React from 'react'
 import { NavLink, Link } from 'react-router-dom'
-import {Home, Trophy, User, LogOut, Zap} from 'lucide-react'
+import {Home, Trophy, User, LogIn, Zap,LogOut} from 'lucide-react'
 import Logo from '../assets/logo.svg'
+import { useAuth } from "../context/AuthContext";
 
 
 export default function Navbar() {
+  const { user, logout } = useAuth();
+
   return (
     <div className='w-full flex justify-center py-6 font-display'>
         <nav className='flex items-center gap-2 rounded-xl px-5 py-2'>
@@ -54,17 +57,32 @@ export default function Navbar() {
 
             <div className='h-6 w-0.5 bg-gray-700 mx-2'></div>
 
-            <NavLink
-            to="/login"
-            className={({ isActive }) =>
+            {user ? (
+              <div className="flex items-center gap-3">
+              <span className="text-gray-800 font-medium px-2 py-1.5">
+               Hi, {user.userName}
+              </span>
+
+              <button
+              title='LogOut'
+              onClick={logout}
+              className=" font-bold px-3 py-2 text-m rounded-md bg-red-200 hover:bg-red-300"
+            >
+              <LogOut size={15} strokeWidth={2} />
+            </button>
+              </div>
+              
+            ) : (
+              <NavLink
+              to="/login"
+              className={({ isActive }) =>
               `flex items-center gap-1.5 px-2 py-1.5 rounded-md text-m font-medium ${
-                isActive? "bg-gray-700 text-white": "text-gray-800 hover:bg-gray-200"
-              }`
-            }
-          >
-            <User size={15} strokeWidth={2} />
-            SignUp
-          </NavLink>
+              isActive? "bg-gray-700 text-white": "text-gray-800 hover:bg-gray-200"}`
+              }>
+            <LogIn size={15} strokeWidth={2} />
+              Login/Register
+            </NavLink>
+          )}
         </nav>
 
     </div>
