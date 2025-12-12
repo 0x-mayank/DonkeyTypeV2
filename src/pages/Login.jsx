@@ -1,18 +1,18 @@
-// src/pages/Login.jsx
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Zap } from "lucide-react";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth"; 
+import { auth } from "../firebase";
 import { api } from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { refreshUser } = useAuth();
 
   const [tab, setTab] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
 
   const [userName, setUserName] = useState("");
   const [rEmail, setREmail] = useState("");
@@ -31,12 +31,16 @@ export default function Login() {
     }
     try {
       setLoading(true);
-      const res = await api.post("/auth/login", { email: email.trim(), password });
-      login(res);
-      navigate("/", { replace: true });
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      
+      navigate("/test", { replace: true });
     } catch (err) {
-      const msg = err?.data?.error || err?.error || err?.message || "Login failed";
-      setError(typeof msg === "string" ? msg : JSON.stringify(msg));
+      console.error(err);
+      let msg = "Login failed";
+      if (err.code === 'auth/invalid-credential') msg = "Invalid email or password.";
+      if (err.code === 'auth/user-not-found') msg = "No account found with this email.";
+      if (err.code === 'auth/wrong-password') msg = "Incorrect password.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -60,16 +64,22 @@ export default function Login() {
 
     try {
       setLoading(true);
-      const res = await api.post("/auth/register", {
+      await createUserWithEmailAndPassword(auth, rEmail.trim(), rPassword);
+      await api.post("/auth/register", {
         userName: userName.trim(),
-        email: rEmail.trim(),
-        password: rPassword,
       });
-      login(res);
-      navigate("/", { replace: true });
+      await refreshUser();
+
+      navigate("/test", { replace: true });
     } catch (err) {
-      const msg = err?.data?.error || err?.error || err?.message || "Registration failed";
-      setError(typeof msg === "string" ? msg : JSON.stringify(msg));
+      console.error(err);
+      let msg = "Registration failed";
+      
+      if (err.response?.data?.error === 'user_exists') msg = "Username already taken.";
+      if (err.code === 'auth/email-already-in-use') msg = "Email already in use.";
+      if (err.code === 'auth/weak-password') msg = "Password is too weak.";
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -82,19 +92,17 @@ export default function Login() {
     <div className="font-display min-h-screen flex items-start justify-center bg-[#f2f0e3] text-gray-800 py-16">
       <div className={cardClasses}>
         <div className="text-center mb-6">
-          <h1 className="text-6xl font-instrument italic font-semibold">
-            Welcome to <span className="text-[#f76f53]">donkeyType</span>
+          <h1 className="text-6xl font-instrument font-semibold">
+            Welcome to <span className="text-[#f76f53] italic">donkeyType</span>
           </h1>
           <p className="font-display mt-2 text-gray-500">Continue your typing journey</p>
         </div>
 
-        <div className=" flex items-center justify-center gap-10 m-10">
+        <div className=" flex justify-between rounded-xl gap-1 m-10 bg-gray-200 p-1">
           <button
             onClick={() => { setTab("login"); setError(null); }}
-            className={`px-6 py-3 rounded-lg text-sm font-medium transition ${
-              tab === "login"
-                ? "bg-gray-700 text-white shadow"
-                : "text-gray-700 hover:bg-gray-100"
+            className={`py-3 rounded-lg w-[50%] text-sm font-medium  transition ${
+              tab === "login" ? "bg-gray-700 text-white shadow hover:bg-gray-800": "text-gray-700 hover:bg-gray-300"
             }`}
           >
             Login
@@ -102,8 +110,8 @@ export default function Login() {
 
           <button
             onClick={() => { setTab("register"); setError(null); }}
-            className={`px-4 py-3 rounded-lg text-sm font-medium transition ${
-              tab=== "register"? "bg-gray-700 text-white shadow": "text-gray-700 hover:bg-gray-100"
+            className={`px-4 py-3 rounded-lg w-[50%] text-sm font-medium transition ${
+              tab=== "register"? "bg-gray-700 text-white shadow hover:bg-gray-800": "text-gray-700 hover:bg-gray-300"
             }`}
           >
             Register
