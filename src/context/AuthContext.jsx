@@ -1,64 +1,49 @@
-// src/context/AuthContext.jsx
-import React, {createContext,useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../firebase';
 import { api } from '../utils/api';
 
 const AuthContext = createContext();
 
-export function AuthProvider({children}) {
-  const [user, setUser]= useState(() =>{
-    const raw= localStorage.getItem('user');
-    return raw? JSON.parse(raw) : null;
-  });
-  const [token, setToken]= useState(() => localStorage.getItem('token'));
-  const [loading, setLoading]= useState(Boolean(token));
-  const [error, setError]= useState(null);
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() =>{
-    let mounted=true;
-    async function validate(){
-      if(!token){
-        setLoading(false);
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const res = await api.get('/auth/me');
+          setUser(res.user); 
+        } catch (err) {
+          console.error("failed to fetch user profile:", err);
+          setUser(null);
+        }
+      } else {
         setUser(null);
-        return;
       }
-      try{
-        setLoading(true);
-        const res= await api.get('/auth/me', { token });
-        if(!mounted) return;
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const refreshUser = async () => {
+    const firebaseUser = auth.currentUser;
+    if (firebaseUser) {
+        const res = await api.get('/auth/me');
         setUser(res.user);
-        localStorage.setItem('user', JSON.stringify(res.user));
-      } catch (err) {
-        console.warn('token validation failed', err);
-        setUser(null);
-        setToken(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      }
-      finally{
-        if(mounted) setLoading(false);
-      }
     }
-    validate();
-    return ()=>{mounted = false; };
-  }, [token]);
+  }
 
-  const login = ({token: newToken, user: newUser})=>{
-    setToken(newToken);
-    setUser(newUser);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
-  };
-
-  const logout= ()=> {
-    setToken(null);
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{user, token, loading, error, login, logout}}>
-      {children}
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 }
