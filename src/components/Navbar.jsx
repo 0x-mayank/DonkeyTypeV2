@@ -30,7 +30,7 @@ export default function Navbar() {
 
         <div className="h-6 w-px bg-gray-300 mx-1 rounded-full" />
 
-        <div className="flex items-center gap-1 px-1">
+        <div className="flex items-center gap-2 px-1">
           <NavLink to="/" className={getLinkClasses}>
             <Home size={16} strokeWidth={2} className="transition-transform duration-300 group-hover:scale-105" /> 
             Home
