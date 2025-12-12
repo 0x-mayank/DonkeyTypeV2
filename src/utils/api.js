@@ -1,30 +1,48 @@
-const API_BASE ='http://localhost:4000/api';
+import { auth } from '../firebase'; 
 
-async function request(path, {method= 'GET', body, token }={}){
-  const headers={};
-  const t= token?? localStorage.getItem('token');
-  if(t) headers['Authorization']= 'Bearer ' + t;
-  if(body) headers['Content-Type']='application/json';
+const API_BASE = 'http://localhost:4000/api';
 
-  const res= await fetch(`${API_BASE}${path}`, {
+async function request(path, { method = 'GET', body } = {}) {
+  const headers = {};
+  const currentUser = auth.currentUser;
+  let token = null;
+  
+  if (currentUser) {
+    token = await currentUser.getIdToken(false); 
+  }
+  if (token) {
+    headers['Authorization'] = 'Bearer ' + token;
+  }
+  
+  if (body) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
-    credentials: 'include'
   });
-
-  const text= await res.text();
-  try{
-    const data = text? JSON.parse(text) : null;
-    if(!res.ok) throw{status: res.status, data};
-    return data;
-  }catch(err){
-    if(err.status)throw err;
-    throw new Error('failed to parse response');
+  const text = await res.text();
+  
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (err) {
+    console.error("API ERROR: Server returned non-JSON response.");
+    throw { 
+      status: res.status || 500, 
+      message: 'Server returned invalid JSON. See console for details.',
+      raw: text 
+    };
   }
+  if (!res.ok) {
+    throw { status: res.status, data };
+  }
+
+  return data;
 }
 
-export const api= {
+export const api = {
   get: (path, opts) => request(path, { ...opts, method: 'GET' }),
-  post: (path, body, opts) => request(path, {...opts, method: 'POST', body}),
+  post: (path, body, opts) => request(path, { ...opts, method: 'POST', body }),
 };
