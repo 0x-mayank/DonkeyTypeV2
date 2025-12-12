@@ -5,7 +5,7 @@ import Home from './pages/Home'
 import Leaderboard from './pages/Leaderboard'
 import Login from './pages/Login'
 import Test from './pages/Test'
-
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
       <main className='max-w-9xl mx-auto px-4 py-8'>
         <Routes>
           <Route path="/" element={<Home/>} />
-          <Route path="/test" element={<Test/>} />
+          <Route path="/test" element={<ProtectedRoute> <Test /> </ProtectedRoute>} />
           <Route path='/leaderboard' element={<Leaderboard/>} />
           <Route path='/login' element={<Login/>}/>
         </Routes>
