@@ -6,7 +6,7 @@ import FeatureCard from "../components/FeatureCard";
 export default function Home() {
   return (
     <div>
-      <section className="text-center py-30 font-display">
+      <section className="text-center py-14 font-display">
       <div className="max-w-6xl mx-auto">
 
         <h1 className="text-9xl font-instrument leading-tight mb-4" style={{ color: "#3A2B21" }}>
