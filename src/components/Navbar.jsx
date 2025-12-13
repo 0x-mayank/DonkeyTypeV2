@@ -49,7 +49,7 @@ export default function Navbar() {
 
         <div className="pl-2">
           {user ? (
-            <div className="transition-all duration-300 hover:scale-105">
+            <div className="transition-all duration-300">
                <UserMenu user={user} onLogout={logout} />
             </div>
           ) : (
