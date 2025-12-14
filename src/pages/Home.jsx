@@ -7,8 +7,7 @@ export default function Home() {
   return (
     <div>
       <section className="text-center py-14 font-display">
-      <div className="max-w-6xl mx-auto">
-
+      <div>
         <h1 className="text-9xl font-instrument leading-tight mb-4" style={{ color: "#3A2B21" }}>
           <span className="text-[#f76f53] italic">Track</span> your <span className="text-[#f76f53] italic">Progress</span> <span className="block text-9xl">and <span className="text-[#f76f53] italic"> Compete</span> for the Top</span>
         </h1>
