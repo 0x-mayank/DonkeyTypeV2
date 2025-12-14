@@ -21,7 +21,7 @@ export default function Navbar() {
           <img 
             src={Logo} 
             alt="logo" 
-            className="w-7 h-auto mb-1 transition-transform duration-500 ease-in-out group-hover:rotate-12 group-hover:scale-110" 
+            className="w-7 h-auto mb-1 transition-transform duration-500 ease-in-out group-hover:rotate-360 group-hover:scale-110" 
           />
           <span className="font-bold text-gray-800 text-lg tracking-tight select-none transition-colors duration-300 group-hover:text-black">
             donkeyType
