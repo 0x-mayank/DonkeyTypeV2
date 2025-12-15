@@ -66,7 +66,7 @@ export default function TypingBox({ duration = 20 }) {
     return () => clearTimeout(timerRef.current);
   }, [started, timeLeft, finished]);
 
-  const computedFinalWpm = (totalCorrect) => Math.round((totalCorrect/4)/(duration/60));
+  const computedFinalWpm = (totalCorrect) => Math.round((totalCorrect/5)/(duration/60));
   const computedFinalAcc = (totalCorrect, totalIncorrect) =>
     totalCorrect + totalIncorrect > 0 ? Math.round((totalCorrect/(totalCorrect+totalIncorrect))* 100) : 0;
 

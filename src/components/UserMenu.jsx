@@ -30,6 +30,18 @@ export default function UserMenu({ user, onLogout }) {
     return () => { canceled = true; };
   }, [open]);
 
+    useEffect(() => {
+    function onDocClick(e) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+    };
+  }, []);
+
   function toggleOpen() {
     setOpen((v) => !v);
   }
