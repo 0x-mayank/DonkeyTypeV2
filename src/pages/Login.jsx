@@ -203,7 +203,7 @@ export default function Login() {
                   : "bg-gray-700 hover:bg-gray-800 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5"
                 }`}
               >
-                <Zap size={18} strokeWidth={2.5} className={loading ? "animate-spin" : ""} />
+                <Zap size={18} strokeWidth={2.5} />
                 {loading ? "Signing in..." : "Login"}
               </button>
             </form>
@@ -274,7 +274,7 @@ export default function Login() {
                   : "bg-gray-700 hover:bg-gray-800 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5"
                 }`}
               >
-                <Zap size={18} strokeWidth={2.5} className={loading ? "animate-spin" : ""} />
+                <Zap size={18} strokeWidth={2.5} />
                 {loading ? "Creating..." : "Create account"}
               </button>
             </form>
