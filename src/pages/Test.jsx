@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import ResultChart from "../components/ResultChart"; 
 import { api } from "../utils/api";
+import { RefreshCcw, Trophy, Target, Zap } from "lucide-react"; 
 
 const WORDS = [
   "area","baby","back","ball","bank","base","bill","body","book","call","card","care","case","cash","city","club","coat","code","cold","cost","date","deal","door","duty","east","edge","face","fact","farm","fast",
@@ -17,7 +19,7 @@ function makeWords(count){
   return arr;
 }
 
-export default function TypingBox({ duration = 20 }) {
+export default function TypingBox({ duration = 15 }) {
   const words = useRef(makeWords(100));
   const [idx, setIdx] = useState(0);                 
   const [committed, setCommitted] = useState([]);    
@@ -36,6 +38,7 @@ export default function TypingBox({ duration = 20 }) {
   const wordRefs = useRef([]);
   const caretRef = useRef(null);
   const timerRef = useRef(null);
+  const historyRef = useRef([]); 
   
   useEffect(() => {
     inputRef.current?.focus();
@@ -65,6 +68,19 @@ export default function TypingBox({ duration = 20 }) {
     timerRef.current = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
     return () => clearTimeout(timerRef.current);
   }, [started, timeLeft, finished]);
+
+  useEffect(() => {
+    if (!started || finished) return;
+
+    const timeElapsed = duration - timeLeft;
+    if (timeElapsed > 0 && timeElapsed % 2 === 0) {
+      const currentWpm = Math.round((correctChars/5)/(timeElapsed/60));
+      historyRef.current.push({
+        time: timeElapsed,
+        wpm: currentWpm
+      });
+    }
+  }, [timeLeft, started, finished]);
 
   const computedFinalWpm = (totalCorrect) => Math.round((totalCorrect/5)/(duration/60));
   const computedFinalAcc = (totalCorrect, totalIncorrect) =>
@@ -111,6 +127,11 @@ export default function TypingBox({ duration = 20 }) {
     const rawChars = totalCorrect + totalIncorrect;
     const durationSec = duration;
 
+    historyRef.current.push({
+      time: duration,
+      wpm: wpm
+    });
+
     const resultObj = {
       wpm,
       accuracy: acc,
@@ -127,6 +148,8 @@ export default function TypingBox({ duration = 20 }) {
       accuracy: acc,
       correctChars: totalCorrect,
       incorrectChars: totalIncorrect,
+      rawChars,
+      correctWords: correctWordsCount
     });
 
     setFinished(true);
@@ -153,6 +176,7 @@ export default function TypingBox({ duration = 20 }) {
 
   function restart(){
     words.current = makeWords(100);
+    historyRef.current = [];
     setIdx(0);
     setCommitted([]);
     setBuffer("");
@@ -257,12 +281,14 @@ export default function TypingBox({ duration = 20 }) {
   }, [idx, buffer, isFocused]);
 
   return (
-    <div className="w-full pt-[22vh] pb-[8vh]">
-      <div className="mb-3">
-        <div className="text-center">
-          <div className="text-red-500">{timeLeft}s</div>
+    <div className="w-full pt-[18vh] pb-[8vh]">
+      {!finished && (
+        <div className="mb-8">
+          <div className="text-center font-display text-2xl text-[#f76f53] font-bold tracking-wide">
+            {timeLeft}s
+          </div>
         </div>
-      </div>
+      )}
 
       {!finished ? (
         <>
@@ -369,7 +395,7 @@ export default function TypingBox({ duration = 20 }) {
                 }}
                 className="absolute inset-0 flex items-center justify-center pointer-events-auto cursor-text z-10"
               >
-                <div className="py-2 px-3.5 rounded-xl bg-white text-gray-600 font-semibold">
+                <div className="py-2 px-3.5 rounded-xl bg-white text-gray-600 font-semibold shadow-sm border border-gray-100 font-display text-sm">
                   Click to focus
                 </div>
               </div>
@@ -377,45 +403,86 @@ export default function TypingBox({ duration = 20 }) {
           </div>
         </>
       ) : (
-        <div className="w-[90%] max-w-[1200] m-auto text-center py-8 px-4 text-[#f76f53]">
-          <div className="text-3xl font-bold mb-8">Test Complete!</div>
-
-          {finalResult && (
-            <>
-              <div className="flex justify-center gap-10 mt-5 flex-wrap">
-                <div>
-                  <div className="text-[12px] text-gray-500">WPM</div>
-                  <div className="text-[36px] font-bold">{finalResult.wpm}</div>
-                </div>
-                <div>
-                  <div className="text-[12px] text-gray-500">Accuracy</div>
-                  <div className="text-[36px] font-bold">{finalResult.accuracy}%</div>
-                </div>
-                <div>
-                  <div className="text-[12px] text-gray-500">Characters</div>
-                  <div className="text-[36px] font-bold">
-                    {finalResult.correctChars}/{finalResult.correctChars + finalResult.incorrectChars}
+        <div className="w-[95%] max-w-6xl m-auto animate-in fade-in slide-in-from-bottom-8 duration-500">
+          
+          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-8">
+            
+            <div className="flex flex-col gap-4">
+               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-30 transition-opacity">
+                    <Trophy size={48} className="text-gray-500" />
                   </div>
-                </div>
-              </div>
+                  <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1 font-display">WPM</div>
+                  <div className="text-6xl font-bold text-[#f76f53] font-display leading-tight">
+                    {finalResult.wpm}
+                  </div>
+                  <div className="text-xs text-gray-400 font-medium mt-1">words per minute</div>
+               </div>
 
-              <div className="mt-4">
-                <button
-                  className="py-2.5 px-5 bg-gray-800 text-white font-semibold rounded-xl"
+               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-3 opacity-30 transition-opacity">
+                    <Target size={48} className="text-gray-500" />
+                  </div>
+                  <div className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1 font-display">Accuracy</div>
+                  <div className="text-5xl font-bold text-gray-800 font-display leading-tight">
+                    {finalResult.accuracy}<span className="text-2xl text-gray-400 ml-1">%</span>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1 font-display">Char</div>
+                    <div className="text-xl font-bold text-gray-700 font-display">
+                      {finalResult.correctChars}<span className="text-gray-400 text-sm">/{finalResult.correctChars + finalResult.incorrectChars}</span>
+                    </div>
+                 </div>
+                 <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1 font-display">Time</div>
+                    <div className="text-xl font-bold text-gray-700 font-display">{duration}s</div>
+                 </div>
+               </div>
+               
+               <button
+                  className="mt-2 w-full py-4 bg-gray-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-800 transition-all duration-300 group"
                   onClick={restart}
                 >
-                  Try Again
+                  <RefreshCcw size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+                  <span className="font-display tracking-wide">Restart Test</span>
                 </button>
-                <div className="mt-2 text-gray-500 text-[12px]">or press Tab</div>
-              </div>
-            </>
-          )}
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col min-h-[400px]">
+               <div className="flex items-center justify-between mb-6">
+                 <h3 className="text-lg font-bold text-gray-800 font-display flex items-center gap-2">
+                   <Zap size={18} className="text-gray-800" />
+                   Performance Over Time
+                 </h3>
+                 <div className="flex gap-4 text-xs font-medium">
+                    <div className="flex items-center gap-1.5 text-gray-500">
+                      <div className="w-2 h-2 rounded-full bg-[#f76f53]"></div> WPM
+                    </div>
+                 </div>
+               </div>
+               
+               <div className="flex-1 w-full relative">
+                  <div className="absolute inset-0">
+                     <ResultChart data={historyRef.current} />
+                  </div>
+               </div>
+            </div>
+
+          </div>
+
+          <div className="text-center mt-8 text-gray-400 text-sm font-medium font-display animate-pulse">
+            Press <span className="px-2 py-0.5 bg-gray-100 rounded border border-gray-200 text-gray-600 text-xs">Tab</span> to restart immediately
+          </div>
         </div>
       )}
 
-      {!finished && <div className="text-center mt-4.5 text-gray-500 text-[12px]">Press Tab to restart</div>}
+      {!finished && <div className="text-center mt-12 text-gray-400 text-sm font-display tracking-wide">Press <span className="font-bold">Tab</span> to restart</div>}
+      
       <input
-        className="absolute left-[-9999] opacity-0"
+        className="absolute left-[-9999px] opacity-0"
         ref={inputRef}
         autoFocus
         disabled={finished}
